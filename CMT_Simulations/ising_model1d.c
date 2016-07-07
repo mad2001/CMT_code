@@ -1,12 +1,24 @@
-
+/************************* includes **********************************/
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdint.h>
 #include <math.h>
 
+/************************* defines ***********************************/
 #define SIZE 10
+#define KISS_MAX 4294967296.0
 
+static unsigned int CNG,    /* variable for congruential generator */
+                    XSH,    /* variable for xor shifts */
+                    MWC,    /* variable for multiply-with-carry */
+                    c;      /* variable to perform the MWC */
 
+/******************* forward declarations ****************************/
+unsigned int devrand(void);
+void init_KISS();
+unsigned int KISS();
 double random_number();
 int initialize( int lat[ ] );
 int local_energy( int lat[ ], int );
@@ -25,17 +37,17 @@ int main()
     double change = 0.1;        /* step size for temperature loop */
     int steps = 100;            /* number of Monte Carlo steps */
     int i, j;                   /* loop variables */
-    double norm = (1 / (double)(steps * SIZE));
+    double norm = ( 1 / (double)(steps * SIZE) );
 
     double E = 0, E_avg, E_tot;        /* for energy observables */
     double M = 0, M_avg, M_tot;        /* for magnetization observables */
     int de;
     int flips = 0;
 
-    srand( time( NULL ) );      /* initialize random number generator */
+    init_KISS();      /* initialize random number generator */
 
     fp = fopen("data.txt", "w");
-    fprintf(fp, "temperature, energy, magnetization\n");
+    fprintf(fp, "# temperature, energy, magnetization\n");
 
 
     /* temperature loop */
@@ -86,12 +98,61 @@ int main()
 }
 
 
+
+/* returns random 32-bit integers */
+unsigned int devrand(void)
+{
+    int fn;
+    unsigned int r;
+    fn = open("/dev/urandom", O_RDONLY);
+    if (fn == -1)
+        exit(-1); /* Failed! */
+    if (read(fn, &r, 4) != 4)
+       exit(-1); /* Failed! */
+    close(fn);
+    return r;
+}
+
+
+/* initialise KISS generator with random SEED */
+void init_KISS()
+{
+    CNG = devrand();
+    while ( !(XSH = devrand()) )
+        ; /* XSH must not be zero! */
+    MWC = devrand();
+
+    /* We don’t really need to set c as well but let's anyway... */
+    /* NOTE: offset c by 1 to avoid MWC=c=0 */
+    c = devrand() % 698769068 + 1; /* Should be less than 698769069 */
+}
+
+
+/* returns radom number from KISS RNG */
+unsigned int KISS()
+{
+   unsigned long long t;
+
+   /* linear congruential generator */
+   CNG = 314527869 * CNG + 1234567;
+
+   /* three xor shifts */
+   XSH ^= (XSH << 5); XSH ^= (XSH >> 7); XSH ^= (XSH << 22);
+
+   /* multipy-with-carry */
+   t = 4294584393ULL * MWC + c; c = (t >> 32); MWC = t;
+
+   return CNG + XSH + MWC;
+}
+
+
+
 /*********************************************************************
  *  random_number generates a random number between 0 and 1
  *********************************************************************/
 double random_number()
 {
-    return (double)rand() / (double)RAND_MAX;
+    return  KISS() / 4294967296.0;
 }
 
 
