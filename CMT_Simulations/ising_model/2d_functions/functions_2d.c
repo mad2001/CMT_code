@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
-#include "MC_functions.h"
-#include "kiss_rng.h"
+#include "functions_2d.h"
+#include "../random_numbers/kiss_rng.h"
 
 
 /* randomly fill the lattice */
-void fill_lattice( int lat[ SIZE+1 ] )
+void fill_lattice( int lat[ SIZE+1 ][ SIZE+1 ] )
 {
     int i, j;
     for (i=0; i<=SIZE; i++)
@@ -25,20 +25,28 @@ void fill_lattice( int lat[ SIZE+1 ] )
 
 
 /* calculate the energy at a specified spin site */
-int local_energy( int lat[ SIZE+1 ], int row, int col )
+int local_energy( int lat[ SIZE+1 ][ SIZE+1 ], int row, int col )
 {
-    int left, right;
+    int left, right, up, down;
 
-    if ( pos == 0 )
-        left = lat[SIZE];
+    if ( row == 0 )
+        up = lat[SIZE][col];
     else
-        left = lat[pos-1];
-    if ( pos == SIZE )
-        right = lat[0];
+        up = lat[row-1][col];
+    if ( row == SIZE )
+        down = lat[0][col];
     else
-        right = lat[pos+1];
+        down = lat[row+1][col];
+    if ( col == 0 )
+        left = lat[row][SIZE];
+    else
+        left = lat[row][col-1];
+    if ( col == SIZE )
+        right = lat[row][0];
+    else
+        right = lat[row][col+1];
 
-    return -1 * J * lat[pos] * (right + left) - h*lat[pos];
+    return -1 * J * lat[row][col] * (right+left+up+down) - h*lat[pos];
 }
 
 
@@ -49,14 +57,22 @@ int new_energy(int lat[ SIZE+1 ], int pos)
 
     s = -lat[pos];
     /* periodic boundary conditions */
-    if ( pos == 0 )
-        left = lat[SIZE];
+    if ( row == 0 )
+        up = lat[SIZE][col];
     else
-        left = lat[pos-1];
-    if ( pos == SIZE )
-        right = lat[0];
+        up = lat[row-1][col];
+    if ( row == SIZE )
+        down = lat[0][col];
     else
-        right = lat[pos+1];
+        down = lat[row+1][col];
+    if ( col == 0 )
+        left = lat[row][SIZE];
+    else
+        left = lat[row][col-1];
+    if ( col == SIZE )
+        right = lat[row][0];
+    else
+        right = lat[row][col+1];
 
     return -1 * J * s * (right + left) - h*s;
 }
