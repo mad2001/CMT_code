@@ -9,20 +9,21 @@ import numpy as np
 
 
 def output():
-    fname = 'data.txt'
+    fname = 'MCsteps.txt'
     data = np.loadtxt(fname, delimiter=', ')
 
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
-    plt.plot(data[:, 0], data[:, 1], 'bo')
-    plt.hold(True)
-    # plt.xlim(-1, 61)
-    plt.ylabel(r'Energy')
-    plt.xlabel(r'Temperature')
-    plt.title(r'Energy vs Temperature')
-    plt.grid(True)
-    plt.savefig('ising_model_output')
-    plt.show()
+
+    plt.semilogx(data[:, 0], data[:, 1], 'o')
+    plt.xlabel(r'Number of Measurements')
+    plt.ylabel(r'Average Energy')
+    plt.xlim(-10, 1000000)
+    plt.ylim(-1.496, -1.482)
+    plt.grid()
+
+    plt.title(r'Energy vs Number of Measurements at T=1')
+    plt.savefig('MCsteps_plot')
 
 
 if __name__ == '__main__':

@@ -1,17 +1,11 @@
-/* Public domain code for JKISS RNG
-    period of about 2^127*/
+/************************* includes **********************************/
+#include <stdio.h>
+#include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
-
-#define KISS_MAX 4294967296.0
-
-static unsigned int CNG,    /* variable for congruential generator */
-                    XSH,    /* variable for xor shifts */
-                    MWC,    /* variable for multiply-with-carry */
-                    c;      /* variable to perform the MWC */
+#include <math.h>
+#include "kiss_rng.h"
 
 
 /* returns random 32-bit integers */
@@ -43,7 +37,7 @@ void init_KISS()
 }
 
 
-/* returns radom number from KISS RNG */
+/* returns random number from KISS RNG */
 unsigned int KISS()
 {
    unsigned long long t;
@@ -61,12 +55,8 @@ unsigned int KISS()
 }
 
 
-int main()
+/* random_number generates a random number between 0 and 1 */
+double random_number()
 {
-    int i;
-    init_KISS();
-    for (i=0; i<30; i++)
-        printf("%f\n", KISS() / 4294967296.0);
-
-    return 0;
+    return  KISS() / 4294967296.0;
 }
